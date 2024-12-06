@@ -1,0 +1,82 @@
+Optimización de Ubicación de Programas de Ingeniería de Sistemas
+
+Este proyecto tiene como objetivo resolver el problema de ubicar nuevos programas de ingeniería de sistemas en un plano cartesiano 2D, tomando en cuenta diversas restricciones de ubicación. El modelo propuesto maximiza la cobertura del segmento de población y el entorno empresarial de las nuevas ubicaciones, respetando restricciones de proximidad a las localizaciones existentes.
+Descripción del Problema
+
+Actualmente, existen varias localizaciones de programas de ingeniería de sistemas que necesitan ser ampliadas para aceptar más estudiantes. El desafío consiste en encontrar el mejor lugar para los nuevos programas bajo las siguientes restricciones:
+
+    No contigüidad: Los nuevos programas no pueden ser ubicados contiguos a ninguna de las localizaciones existentes.
+    Segmento de población: El segmento de población en la ubicación elegida y las cercanas no puede ser menor a 25.
+    Entorno empresarial: La suma del entorno empresarial en la ubicación elegida y las cercanas no puede ser menor a 20.
+
+Entrada
+
+El modelo toma un archivo de entrada con la siguiente estructura:
+
+    El número de localizaciones existentes.
+    Las coordenadas de estas localizaciones.
+    El tamaño de la matriz de segmentación de población y entorno empresarial.
+    Las matrices de segmentación de población y entorno empresarial.
+    El número de nuevos programas a ubicar.
+
+Salida
+
+La salida generada por el modelo incluye:
+
+    Ganancia total sin incluir las nuevas localizaciones.
+    Ganancia total después de agregar las nuevas localizaciones.
+    Las coordenadas de las localizaciones existentes ordenadas por el primer valor.
+    Las coordenadas de las nuevas localizaciones ordenadas por el primer valor.
+
+Ejemplo de Entrada
+
+3
+6 8
+8 4
+10 10
+15
+4 0 1 1 2 2 0 0 4 15 15 4 11 2 1
+4 0 3 1 6 2 0 0 4 15 15 4 8 2 1
+4 0 3 1 6 2 0 0 4 9 9 4 2 2 2
+...
+4
+
+Ejemplo de Salida
+
+120
+240
+6 8
+8 4
+10 10
+2 3
+5 5
+12 1
+13 15
+
+Requisitos
+
+    Python 3.x
+    Minizinc (si es necesario para el modelo de optimización)
+    Solvers de optimización como Gurobi, CPLEX, o HiGHS.
+
+Instrucciones de Instalación
+
+    Clona este repositorio:
+
+git clone https://github.com/tuusuario/proyecto-ingenieria-sistemas.git
+
+Instala las dependencias necesarias:
+
+pip install -r requirements.txt
+
+Si utilizas Minizinc, asegúrate de tenerlo instalado:
+
+sudo apt install minizinc
+
+Para ejecutar el modelo:
+
+    python main.py
+
+Contribuciones
+
+Este proyecto está abierto a contribuciones. Si deseas mejorar el modelo o agregar nuevas características, siéntete libre de hacer un pull request.

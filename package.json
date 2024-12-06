@@ -1,0 +1,22 @@
+{
+  "name": "analisis_algoritmos2",
+  "version": "1.0.0",
+  "description": "Proyecto Final minizinc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ceball0s/Analisis_Algoritmos2.git"
+  },
+  "author": "Ceball0s",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ceball0s/Analisis_Algoritmos2/issues"
+  },
+  "homepage": "https://github.com/Ceball0s/Analisis_Algoritmos2#readme",
+  "dependencies": {
+    "minizinc": "^4.3.5"
+  }
+}
