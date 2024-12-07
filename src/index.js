@@ -30,7 +30,7 @@ const fs = require('fs')
 
 // funciones minimaz
 
-function generarSolucion(matriz1, matriz2){
+function generarSolucion(matriz1, matriz2, nuevas_sedes){
   const model = new MiniZinc.Model()
   const n = matriz1.length
   model.addString(`int: n = ${n};`)// tamaño matriz
@@ -45,7 +45,7 @@ function generarSolucion(matriz1, matriz2){
   array[1..n, 1..n] of var 0..1: universidades;
 
   % Restricción: solo se pueden construir 4 universidades
-  constraint sum(i in 1..n, j in 1..n)(universidades[i,j]) = 4;
+  constraint sum(i in 1..n, j in 1..n)(universidades[i,j]) = ${nuevas_sedes};
 
   %Restricción: no se puede construir en zonas adyacentes
   constraint forall(i in 1..n, j in 1..n)(
@@ -171,21 +171,32 @@ function generarSolucion(matriz1, matriz2){
   return posicionesDeUnos
 }
 
+
+function solucion(poblacion,empresas,ubicacionesExistentes){
+  let solucion = ""
+  let posicionesNuevas = []
+  let matriz_ganancias_poblacion =  generar_matriz_ganancias(poblacion,ubicacionesExistentes,25)
+  let matriz_ganancias_empresas =  generar_matriz_ganancias(empresas,ubicacionesExistentes,20)
+  posicionesNuevas = generarSolucion(matriz_ganancias_poblacion,matriz_ganancias_empresas)
+  //calcular ganancias
+  ganancia_existente = ganancia(poblacion, empresas, ubicacionesExistentes)
+  
+  ganancia_final = ganancia(poblacion, empresas, posicionesNuevas)
+  solucion = `ganancia inicial ${ganancia_existente}
+              ganancia final ${ganancia_existente+ganancia_final}
+              ${ubicacionesExistentes}
+              ${posicionesNuevas}
+              `
+  return solucion
+}
+
+
+
 const ubicacionesExistentes = [[6, 8], [8, 4], [10, 10]]
-let posicionesNuevas = []
-let matriz_ganancias_poblacion = []
-let matriz_ganancias_empresas = []
 try {
   const resultado = fs.readFileSync('entrada.json', 'utf8')
   const lectura = JSON.parse(resultado)
-  matriz_ganancias_poblacion =  generar_matriz_ganancias(lectura["poblacion"],ubicacionesExistentes,25)
-  matriz_ganancias_empresas =  generar_matriz_ganancias(lectura["empresarial"],ubicacionesExistentes,20)
-  posicionesNuevas = generarSolucion(matriz_ganancias_poblacion,matriz_ganancias_empresas)
-  //calcular ganancias
-  ganancia_existente = ganancia(lectura["poblacion"], lectura["empresarial"], ubicacionesExistentes)
-  console.log(`ganancia inicial ${ganancia_existente}`)
-  ganancia_final = ganancia(lectura["poblacion"], lectura["empresarial"], posicionesNuevas)
-  console.log(`ganancia inicial ${ganancia_existente+ganancia_final}`)
+  console.log(solucion(lectura["poblacion"], lectura["empresarial"], ubicacionesExistentes))
 } catch (error) {
   console.error('Error al leer el archivo:', error)
 }
