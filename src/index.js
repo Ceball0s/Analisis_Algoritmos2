@@ -16,13 +16,13 @@ app.get('/', (req, res) => {
   res.send(`
     <h1>Enviar Datos</h1>
     <form action="/process" method="POST">
-      <label for="matriz1">Matriz 1 (Formato JSON):</label><br>
+      <label for="matriz1">Matriz 1 (separado por espacios):</label><br>
       <textarea id="matriz1" name="matriz1" rows="5" cols="30"></textarea><br><br>
       
-      <label for="matriz2">Matriz 2 (Formato JSON):</label><br>
+      <label for="matriz2">Matriz 2 (separado por espacios):</label><br>
       <textarea id="matriz2" name="matriz2" rows="5" cols="30"></textarea><br><br>
       
-      <label for="ubicaciones">Ubicaciones existentes (Formato: (1,1), (2,2)):</label><br>
+      <label for="ubicaciones">Ubicaciones existentes (Formato: (1,1) (2,2)):</label><br>
       <textarea id="ubicaciones" name="ubicaciones" rows="3" cols="30"></textarea><br><br>
       
       <label for="sedes">Número de sedes a agregar:</label><br>
