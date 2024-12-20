@@ -1,203 +1,95 @@
-const MiniZinc = require('minizinc')
-const { generar_matriz_ganancias,encontrarPosicionesDeUnos, ganancia } = require('./utilidades')
-const fs = require('fs')
+const express = require('express');
+const bodyParser = require('body-parser');
 
+const { esCuadrada, convertirAFormato, convertirUbicaciones } = require('./utilidades');
+const { solucion } = require('./proyecto');
 
-// function retornarPromesa(solve){
-//   // Transforma `solve` en una promesa
-//   const solvePromise = new Promise((resolve, reject) => {
-//     // Escucha cuando se encuentre una solución
-//     solve.on('solution', solution => {
-//       resolve({
-//         solution: solution.output.json,
-//         statistics: solution.statistics
-//       });
-//     });
+const app = express();
+const PORT = 3000;
 
-//     // Escucha si ocurre un error
-//     solve.on('error', (error) => {
-//       reject(error);
-//     });
+// Middleware para procesar datos del formulario
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-//     //Escucha estadísticas, puedes usarlas si es necesario
-//     solve.on('statistics', stats => {
-//       console.log(stats.statistics);
-//     });
-//   });
-//   return solvePromise;
-// }
+// Página principal con formulario
+app.get('/', (req, res) => {
+  res.send(`
+    <h1>Enviar Datos</h1>
+    <form action="/process" method="POST">
+      <label for="matriz1">Matriz 1 (Formato JSON):</label><br>
+      <textarea id="matriz1" name="matriz1" rows="5" cols="30"></textarea><br><br>
+      
+      <label for="matriz2">Matriz 2 (Formato JSON):</label><br>
+      <textarea id="matriz2" name="matriz2" rows="5" cols="30"></textarea><br><br>
+      
+      <label for="ubicaciones">Ubicaciones existentes (Formato: (1,1), (2,2)):</label><br>
+      <textarea id="ubicaciones" name="ubicaciones" rows="3" cols="30"></textarea><br><br>
+      
+      <label for="sedes">Número de sedes a agregar:</label><br>
+      <input type="number" id="sedes" name="sedes" min="1" required><br><br>
+      
+      <button type="submit">Enviar</button>
+    </form>
+  `);
+});
 
+// Procesar datos enviados desde el formulario
+app.post('/process', async (req, res) => {
+  try {
+    // Convertir las matrices
+    const matriz1 = convertirAFormato(req.body.matriz1);
+    const matriz2 = convertirAFormato(req.body.matriz2);
 
-// funciones minimaz
+    // Validar matrices cuadradas y del mismo tamaño
+    if (!esCuadrada(matriz1) || !esCuadrada(matriz2)) {
+      return res.status(400).send('Ambas matrices deben ser cuadradas.');
+    }
+    if (matriz1.length !== matriz2.length) {
+      return res.status(400).send('Ambas matrices deben tener el mismo tamaño.');
+    }
 
-function generarSolucion(matriz1, matriz2, nuevas_sedes){
-  const model = new MiniZinc.Model()
-  const n = matriz1.length
-  model.addString(`int: n = ${n};`)// tamaño matriz
-  // Convertir matriz en una sola dimensión 
-  const matriz1EnUnaDimension = matriz1.flatMap(fila => fila).join(", ")
-  const matriz2EnUnaDimension = matriz2.flatMap(fila => fila).join(", ")
-  model.addString(`array[1..n, 1..n] of int: poblacion = array2d(1..${n}, 1..${n}, [${matriz1EnUnaDimension}]);`)
-  model.addString(`array[1..n, 1..n] of int: empresas = array2d(1..${n}, 1..${n}, [${matriz2EnUnaDimension}]);`)
+    // Procesar ubicaciones existentes
+    const ubicacionesTexto = req.body.ubicaciones.trim();
+    const ubicacionesExistentes = convertirUbicaciones(ubicacionesTexto);
 
-  model.addString(`
-  % Variables de decisión: 1 si se construye una universidad en la zona, 0 en caso contrario
-  array[1..n, 1..n] of var 0..1: universidades;
+    // Validar número de sedes
+    const sedes = parseInt(req.body.sedes, 10);
+    if (isNaN(sedes) || sedes < 1) {
+      return res.status(400).send('El número de sedes debe ser un entero positivo.');
+    }
+    // Llamar a la función de solución (simulada)
+    const resultado = await solucion(matriz1, matriz2, ubicacionesExistentes, sedes);
 
-  % Restricción: solo se pueden construir 4 universidades
-  constraint sum(i in 1..n, j in 1..n)(universidades[i,j]) = ${nuevas_sedes};
+    // Mostrar resultados
+    res.send(`
+      <h1>Resultado</h1>
+      <pre>${resultado}</pre>
+    `);
+  } catch (error) {
+    res.status(400).send('Error al procesar los datos. Verifica el formato y los valores ingresados.');
+  }
+});
 
-  %Restricción: no se puede construir en zonas adyacentes
-  constraint forall(i in 1..n, j in 1..n)(
-    if universidades[i,j] = 1 then
-      forall(k in max(1,i-1)..min(n,i+2), l in max(1,j-1)..min(n,j+2))(
-        if (i != k \\/ j != l) then
-          universidades[k,l] = 0
-        endif
-      )
-    endif
-  );
-
-  % Función objetivo: maximizar la suma ponderada de población y empresas
-  var int: ganancia = sum(i in 1..n, j in 1..n)(
-    universidades[i,j] * (poblacion[i,j] + empresas[i,j])
-  );
-
-  solve maximize ganancia;
-  % Mostrar las ubicaciones de las universidades y la ganancia 
-  output [ "Ubicaciones de las universidades:\\n", 
-  show([universidades[i,j] | i in 1..n, j in 1..n]), "\\nGanancia: ", show(ganancia), "\\n" ];  
-  `)
-    
-  // const solve = model.solve({
-  //   options: {
-  //     solver: 'Gecode',
-  //     statistics: true
-  //   }
-  // })
-  // let ultima_solucion = []
-  // // Escucha si ocurre un error
-  // solve.on('error', (error) => {
-  //   console.log(error)
-  // })
-  // solve.on('solution', solution => {
-  //   //console.log(solution.output.json)
-  //   ultima_solucion = solution.output.json
-  // })
-  // solve.then(result => {
-  //   console.log(result.status)
-  //   console.log(ultima_solucion)
-  // })
-  let universidades = [
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 1, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      1, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 1, 0, 0,
-      0, 0, 0
-    ],
-    [
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0,
-      0, 0, 0
-    ]
-  ]
-
-  const posicionesDeUnos = encontrarPosicionesDeUnos(universidades)
-  //console.log(posicionesDeUnos); // Salida: [[0, 0], [1, 1], [2, 2]]
-  return posicionesDeUnos
-}
-
-
-function solucion(poblacion,empresas,ubicacionesExistentes){
-  let solucion = ""
-  let posicionesNuevas = []
-  let matriz_ganancias_poblacion =  generar_matriz_ganancias(poblacion,ubicacionesExistentes,25)
-  let matriz_ganancias_empresas =  generar_matriz_ganancias(empresas,ubicacionesExistentes,20)
-  posicionesNuevas = generarSolucion(matriz_ganancias_poblacion,matriz_ganancias_empresas)
-  //calcular ganancias
-  ganancia_existente = ganancia(poblacion, empresas, ubicacionesExistentes)
-  
-  ganancia_final = ganancia(poblacion, empresas, posicionesNuevas)
-  solucion = `ganancia inicial ${ganancia_existente}
-              ganancia final ${ganancia_existente+ganancia_final}
-              ${ubicacionesExistentes}
-              ${posicionesNuevas}
-              `
-  return solucion
-}
+// Iniciar el servidor
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
 
 
 
-const ubicacionesExistentes = [[6, 8], [8, 4], [10, 10]]
-try {
-  const resultado = fs.readFileSync('entrada.json', 'utf8')
-  const lectura = JSON.parse(resultado)
-  console.log(solucion(lectura["poblacion"], lectura["empresarial"], ubicacionesExistentes))
-} catch (error) {
-  console.error('Error al leer el archivo:', error)
-}
+// // const ubicacionesExistentes = [[6, 8], [8, 4], [10, 10]]
+// const ubicacionesExistentes = [[1, 1]]
 
+// // const resultado = fs.readFileSync('entrada.json', 'utf8')
+// const matriz1 = generarMatriz(5, 0, 30);
+// const matriz2 = generarMatriz(5, 0, 30);
+// // const lectura = JSON.parse(resultado)
+// // console.log(solucion(lectura["poblacion"], lectura["empresarial"], ubicacionesExistentes))
+
+// solucion(matriz1, matriz2, ubicacionesExistentes, 3)
+// .then((respuesta) => {
+//   console.log(respuesta);
+// })
+// .catch((error) => {
+//   console.error('Error al procesar la solución:', error);
+// });

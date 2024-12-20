@@ -94,9 +94,55 @@ function ganancia(matriz1, matriz2, ubicacionesExistentes) {
   } 
   return suma 
 }
+
+function formatearPosiciones(posiciones) { 
+  return posiciones.map(pos => `(${pos[0]}, ${pos[1]})`).join(', ')
+}
+
+// Función para generar una matriz cuadrada con valores aleatorios entre un rango dado
+function generarMatriz(n, min = 0, max = 100) {
+  const matriz = [];
+  
+  for (let i = 0; i < n; i++) {
+    const fila = [];
+    for (let j = 0; j < n; j++) {
+      // Genera un número aleatorio entre min y max (inclusive)
+      const valorAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
+      fila.push(valorAleatorio);
+    }
+    matriz.push(fila);
+  }
+  
+  return matriz;
+}
 // fin funciones para generar las matrices
 
- // Exportar las funciones 
+// validaciones
+
+// Función para validar si una matriz es cuadrada
+function esCuadrada(matriz) {
+  if (!Array.isArray(matriz)) return false;
+  const n = matriz.length;
+  return matriz.every(row => Array.isArray(row) && row.length === n);
+}
+
+// Función para convertir la cadena en matriz bidimensional
+function convertirAFormato(cadena) {
+  const filas = cadena.trim().split('\n'); // Dividir por líneas
+  return filas.map(fila => fila.trim().split(/\s+/).map(Number)); // Dividir por espacios y convertir a números
+}
+
+// Función para convertir ubicaciones de formato (1,1) (2,2) a [[1,1], [2,2]]
+function convertirUbicaciones(cadena) {
+  return cadena
+    .split(')') // Separar las coordenadas por ')'
+    .filter(par => par.trim()) // Filtrar posibles entradas vacías
+    .map(par => par.replace('(', '').trim()) // Eliminar los paréntesis '('
+    .map(par => par.split(',').map(Number)); // Separar por ',' y convertir a número
+}
+// fin validaciones
+
+// Exportar las funciones 
 module.exports = {
   generarMatrizCuadrada,
   mostrarArreglo,
@@ -104,5 +150,10 @@ module.exports = {
   esContiguo, 
   generar_matriz_ganancias,
   encontrarPosicionesDeUnos,
-  ganancia
+  ganancia,
+  formatearPosiciones,
+  generarMatriz,
+  esCuadrada,
+  convertirAFormato,
+  convertirUbicaciones
 };
