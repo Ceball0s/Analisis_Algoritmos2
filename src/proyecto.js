@@ -54,8 +54,8 @@ function conectorMinizinc(matriz1, matriz2, nuevas_sedes){
         solve.then(result => {
             let universidades = encontrarPosicionesDeUnos(result["solution"]["output"]["json"]["universidades"])
             let Ganancia = parseInt(result["solution"]["output"]["default"].split("Ganancia:")[1].trim(), 10);
-            // console.log(universidades)
-            // console.log(result)
+            console.log(universidades)
+            console.log(result)
             // return salida
             resolve({
             universidades,
