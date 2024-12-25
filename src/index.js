@@ -66,7 +66,10 @@ app.post('/process', async (req, res) => {
       <pre>${resultado}</pre>
     `);
   } catch (error) {
-    res.status(400).send('Error al procesar los datos. Verifica el formato y los valores ingresados.');
+    res.status(400).json({
+      message: 'Error al procesar los datos. Verifica el formato y los valores ingresados.',
+      error: error.message || error
+    });
   }
 });
 

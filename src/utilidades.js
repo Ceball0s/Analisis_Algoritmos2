@@ -25,6 +25,31 @@ function mostrarArreglo(arreglo) {
   } 
 }
 
+
+function armarArreglo(arreglo) {
+  resultado = ""
+  for (let y = 0; y < arreglo.length; y++) { 
+    let fila = ''
+    for (let x = 0; x < arreglo[y].length; x++) { 
+      let elemento = String(arreglo[y][x])
+      fila += elemento + ' '.repeat(2 - elemento.length) + ' | '
+    }
+    resultado = resultado + fila + "\n"
+  } 
+  return resultado
+}
+
+
+function agregar_ubicaciones_matriz(array,ubicaciones_existentes) {
+  for (var i = 0; i < ubicaciones_existentes.length; i++) {
+    y = ubicaciones_existentes[i][1]
+    x = ubicaciones_existentes[i][0]
+    array[y][x] = 1
+  }
+  return array
+}
+
+
 function calcular_ganancia(array,y,x) {
   sumatoria = 0
   for (var jy = Math.max(0,y-1); jy < Math.min(array.length,y+2); jy++) {
@@ -155,5 +180,7 @@ module.exports = {
   generarMatriz,
   esCuadrada,
   convertirAFormato,
-  convertirUbicaciones
+  convertirUbicaciones,
+  armarArreglo,
+  agregar_ubicaciones_matriz
 };

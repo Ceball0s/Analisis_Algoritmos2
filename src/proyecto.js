@@ -1,5 +1,5 @@
 const MiniZinc = require('minizinc')
-const { generar_matriz_ganancias,encontrarPosicionesDeUnos, ganancia, formatearPosiciones } = require('./utilidades')
+const { generar_matriz_ganancias,encontrarPosicionesDeUnos, ganancia, formatearPosiciones, armarArreglo, agregar_ubicaciones_matriz } = require('./utilidades')
 
 // funciones minimaz
 
@@ -53,13 +53,16 @@ function conectorMinizinc(matriz1, matriz2, nuevas_sedes){
         solve.on('error', reject);
         solve.then(result => {
             let universidades = encontrarPosicionesDeUnos(result["solution"]["output"]["json"]["universidades"])
+            let arreglo = result["solution"]["output"]["json"]["universidades"]
             let Ganancia = parseInt(result["solution"]["output"]["default"].split("Ganancia:")[1].trim(), 10);
             console.log(universidades)
-            console.log(result)
+            console.log(Ganancia)
+
             // return salida
             resolve({
             universidades,
-            Ganancia
+            Ganancia,
+            arreglo
             });
         })
     });
@@ -68,16 +71,22 @@ function conectorMinizinc(matriz1, matriz2, nuevas_sedes){
 
 async function solucion(poblacion,empresas,ubicacionesExistentes, n_sedes){
     let matriz_ganancias_poblacion =  generar_matriz_ganancias(poblacion,ubicacionesExistentes,25)
+    
     let matriz_ganancias_empresas =  generar_matriz_ganancias(empresas,ubicacionesExistentes,20)
-    let { universidades , Ganancia } = await conectorMinizinc(matriz_ganancias_poblacion, matriz_ganancias_empresas, n_sedes);
+    console.log(matriz_ganancias_poblacion)
+    console.log(matriz_ganancias_empresas)
+    let { universidades, Ganancia, arreglo } = await conectorMinizinc(matriz_ganancias_poblacion, matriz_ganancias_empresas, n_sedes);
     //calcular ganancias
     ganancia_existente = ganancia(poblacion, empresas, ubicacionesExistentes)
-
+    console.log(universidades)
     // ganancia_final =  ganancia(poblacion, empresas, universidades)
     let resultado = `ganancia inicial: ${ganancia_existente}
 ganancia final: ${ganancia_existente + Ganancia}
 pociciones establecidas: ${formatearPosiciones(ubicacionesExistentes)}
 pociciones nuevas: ${formatearPosiciones(universidades)}
+arreglo universiaddes: 
+
+${armarArreglo(agregar_ubicaciones_matriz(arreglo, ubicacionesExistentes))}
 `
     return resultado
 }
