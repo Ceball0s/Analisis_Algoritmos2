@@ -84,6 +84,8 @@ La salida generada por el modelo incluye:
 
    ```bash
    sudo apt install minizinc
+   #arch
+   yay -S  minizinc-ide
    ```
 
 4. **Para ejecutar el modelo**:
