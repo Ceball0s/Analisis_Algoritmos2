@@ -1,11 +1,3 @@
-## Creadores
-
-- **Miguel Angel Ceballos         - 2259619**
-- **Cristian leonardo             - 1968253**
-- **Nicolas Gutierrez             - 2259515**
-- **Karen Jhulieth Grijalba Ortiz - 2259623**
-
-
 # Optimización de Ubicación de Programas de Ingeniería de Sistemas
 
 Este proyecto tiene como objetivo resolver el problema de ubicar nuevos programas de ingeniería de sistemas en un plano cartesiano 2D, considerando diversas restricciones de ubicación. El modelo propuesto busca maximizar la cobertura de la población y el entorno empresarial de las nuevas ubicaciones, respetando las restricciones de proximidad a las localizaciones existentes.
